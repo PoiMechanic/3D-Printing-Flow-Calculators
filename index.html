@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow Rate Cube</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0f0f0f;
+    --surface:  #181818;
+    --surface2: #222222;
+    --border:   #2e2e2e;
+    --text:     #e8e4dc;
+    --muted:    #666;
+    --accent:   #f0a500;
+    --success:  #4caf82;
+    --mono:     'IBM Plex Mono', monospace;
+    --sans:     'IBM Plex Sans', sans-serif;
+  }
+
+  html {
+    height: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 10px 12px;
+    overflow: auto;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 100%;
+    min-height: calc(100vh - 20px);
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Header ── */
+  .header {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    display: inline;
+  }
+  h1 span { color: var(--accent); }
+
+  /* ── Grid layout ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Form rows ── */
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .field:last-of-type { border-bottom: none; }
+
+  .field label {
+    font-size: 15px;
+    color: #aaa;
+    font-weight: 300;
+    flex: 1;
+  }
+
+  .field input {
+    width: 90px;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 5px 8px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(240,165,0,0.12);
+  }
+  .field input::placeholder { color: var(--muted); }
+
+  /* ── Cube section inner layout ── */
+  .cube-inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-top: 8px;
+  }
+
+  /* ── Measurement grid ── */
+  .meas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    align-content: stretch;
+  }
+  .meas-cell {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 6px 8px;
+    transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .meas-cell:focus-within { border-color: var(--accent); }
+  .meas-cell label {
+    display: inline;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #aaa;
+    font-weight: 300;
+    flex: 1;
+  }
+  .meas-cell input {
+    width: 95px;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 5px 14px 5px 8px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .meas-cell input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(240,165,0,0.12);
+  }
+  .meas-cell input::placeholder { color: #333; font-weight: 400; }
+  .meas-cell .unit {
+    display: none;
+  }
+
+  /* ── Calculate button ── */
+  .calc-btn {
+    width: 100%;
+    padding: 9px;
+    background: var(--accent);
+    border: none;
+    border-radius: 3px;
+    color: #000;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .calc-btn:hover { background: #ffb930; }
+  .calc-btn:active { transform: scale(0.99); }
+
+  /* ── Result (cube) ── */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.3s;
+  }
+  .result-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    border-color: rgba(240,165,0,0.35);
+  }
+  .result-left { flex: 1; }
+  .result-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .result-value {
+    font-family: var(--mono);
+    font-size: 37px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .result-detail {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.6;
+  }
+  .result-detail span { color: #888; }
+  .result-status { text-align: right; }
+  .status-icon { font-size: 23px; display: block; margin-bottom: 2px; }
+  .status-text { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* ── Mini result (3 smaller calculators) ── */
+  .mini-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.25s;
+  }
+  .mini-result.visible {
+    opacity: 1;
+    transform: translateY(0);
+    border-color: rgba(240,165,0,0.3);
+  }
+  .mini-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .mini-value {
+    font-family: var(--mono);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    font-size: 12px;
+    color: #333;
+    text-align: center;
+    margin-top: 8px;
+    font-family: var(--mono);
+  }
+  .footer a { color: #444; }
+
+  /* ── Copy button ── */
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: #4caf82; color: #4caf82; }
+
+
+  /* ── Editable text ── */
+  [contenteditable="true"] {
+    outline: none;
+    cursor: text;
+    border-radius: 2px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  [contenteditable="true"]:hover {
+    background: rgba(240,165,0,0.06);
+    box-shadow: 0 0 0 1px rgba(240,165,0,0.2);
+  }
+  [contenteditable="true"]:focus {
+    background: rgba(240,165,0,0.1);
+    box-shadow: 0 0 0 1px rgba(240,165,0,0.4);
+  }
+
+  /* ── Formula bar ── */
+  .formula {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .formula span { color: var(--accent); }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%,60%  { transform: translateX(-4px); }
+    40%,80%  { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.35s ease; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header" style="justify-content:space-between;">
+    <h1 contenteditable="true" spellcheck="false">Flow Test Calculators <span>for 3D Printing Slicers</span></h1>
+  </div>
+  <span style="font-family:var(--sans); font-size:14px; color:#ffffff; font-weight:300; margin-left:auto;" contenteditable="true" spellcheck="false">by Beacon</span>
+
+  <!-- 4-column grid -->
+  <div class="grid">
+
+    <!-- Col 1: Single Wall Cube (spans 2 cols) -->
+    <div style="grid-column: span 2; display: flex; flex-direction: column; height: 100%;">
+      <div class="card" style="flex:1;">
+        <div class="card-title" contenteditable="true" spellcheck="false">Flow Rate — Single Wall Cube Method</div>
+
+        <div class="field">
+          <label contenteditable="true" spellcheck="false">Target Wall Thickness (mm)</label>
+          <input type="number" id="multiplier" value="0.40" step="0.01" min="0.1" placeholder="0.40">
+        </div>
+        <div class="field">
+          <label contenteditable="true" spellcheck="false">Current flow ratio</label>
+          <input type="number" id="current_flow" value="1" step="0.001" min="0.001" placeholder="1.0">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+          <!-- Instructions box -->
+          <div style="background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:12px; display:flex; align-items:center;">
+            <p contenteditable="true" spellcheck="false" style="font-family:var(--sans); font-size:14px; color:#aaa; font-weight:300; line-height:1.7;">Measure each side in the middle of the cube avoiding the corners. Enter each side's measurement. If all sides measure the same, just enter that value in one section (Side 1) and hit calculate.</p>
+          </div>
+
+          <!-- Measurement inputs -->
+          <div class="meas-grid">
+            <div class="meas-cell">
+              <label contenteditable="true" spellcheck="false">Side 1</label>
+              <input type="number" id="s1" step="0.001" placeholder="0.000" value="0.000">
+              <div class="unit">mm</div>
+            </div>
+            <div class="meas-cell">
+              <label contenteditable="true" spellcheck="false">Side 2</label>
+              <input type="number" id="s2" step="0.001" placeholder="0.000" value="0.000">
+              <div class="unit">mm</div>
+            </div>
+            <div class="meas-cell">
+              <label contenteditable="true" spellcheck="false">Side 3</label>
+              <input type="number" id="s3" step="0.001" placeholder="0.000" value="0.000">
+              <div class="unit">mm</div>
+            </div>
+            <div class="meas-cell">
+              <label contenteditable="true" spellcheck="false">Side 4</label>
+              <input type="number" id="s4" step="0.001" placeholder="0.000" value="0.000">
+              <div class="unit">mm</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="formula" contenteditable="true" spellcheck="false"><span>New Ratio</span> = (Target Wall Thickness ÷ Avg Measured Wall) × Current Ratio</div>
+        <button class="calc-btn" onclick="calculate()">CALCULATE FLOW RATE →</button>
+      </div>
+
+      <!-- Result -->
+      <div class="result-card" id="result_card">
+        <div class="result-left">
+          <div class="result-label" contenteditable="true" spellcheck="false">New Flow Ratio</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="result-value" id="result_value">—</div>
+            <button class="copy-btn" id="copy_main" onclick="copyVal('result_value','copy_main')">COPY</button>
+          </div>
+          <div class="result-detail" id="result_detail"></div>
+        </div>
+        <div class="result-status">
+          <span class="status-icon" id="status_icon">⚙️</span>
+          <div class="status-text" id="status_text">Update your<br>slicer profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col 2: Block Method -->
+    <div class="card">
+      <div class="card-title" contenteditable="true" spellcheck="false">Flow Rate · Block Method</div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Current flow ratio</label>
+        <input type="number" id="fr_current" value="1.0" step="0.001" min="0.01" placeholder="1.0">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Best block value (e.g. +5 or −3)</label>
+        <input type="number" id="fr_chip" value="0" step="1" placeholder="0">
+      </div>
+      <div class="formula" contenteditable="true" spellcheck="false"><span>New Ratio</span> = Current Ratio × (100 + Best Block Value) ÷ 100</div>
+      <button class="calc-btn" onclick="calcFlowBlock()">CALCULATE FLOW RATIO →</button>
+      <div class="mini-result" id="fr_result">
+        <span class="mini-label" contenteditable="true" spellcheck="false">New Flow Ratio</span>
+        <span class="mini-value" id="fr_value">—</span>
+        <button class="copy-btn" id="copy_fr" onclick="copyVal('fr_value', 'copy_fr')">COPY</button>
+      </div>
+    </div>
+
+    <!-- Col 3: Pressure Advance -->
+    <div class="card">
+      <div class="card-title" contenteditable="true" spellcheck="false">Pressure Advance · Tower Method</div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Starting PA value</label>
+        <input type="number" id="pa_start" value="0" step="0.001" min="0" placeholder="0">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">PA step size used in test</label>
+        <input type="number" id="pa_step" value="0.002" step="0.001" min="0.0001" placeholder="0.002">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Best height (mm)</label>
+        <input type="number" id="pa_height" value="" step="0.1" min="0" placeholder="e.g. 8">
+      </div>
+      <div class="formula" contenteditable="true" spellcheck="false"><span>PA</span> = Start Value + (Step Size × Best Height)</div>
+      <button class="calc-btn" onclick="calcPA()">CALCULATE PRESSURE ADVANCE →</button>
+      <div class="mini-result" id="pa_result">
+        <span class="mini-label" contenteditable="true" spellcheck="false">New Pressure Advance</span>
+        <span class="mini-value" id="pa_value">—</span>
+        <button class="copy-btn" id="copy_pa" onclick="copyVal('pa_value', 'copy_pa')">COPY</button>
+      </div>
+    </div>
+
+    <!-- Col 4: Max Volumetric Speed -->
+    <div class="card">
+      <div class="card-title" contenteditable="true" spellcheck="false">Max Volumetric Speed</div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Starting Volumetric Speed (mm³/s)</label>
+        <input type="number" id="mvs_start" value="1" step="0.5" min="0.1" placeholder="1">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Volumetric step used in test</label>
+        <input type="number" id="mvs_step" value="0.5" step="0.1" min="0.01" placeholder="0.5">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Lowest failure height (mm)</label>
+        <input type="number" id="mvs_height" value="" step="0.1" min="0" placeholder="e.g. 12">
+      </div>
+      <div class="formula" contenteditable="true" spellcheck="false"><span>Max Flow</span> = Starting Speed + (Step × Failure Height)</div>
+      <button class="calc-btn" onclick="calcMVS()">CALCULATE MAX FLOWRATE →</button>
+      <div class="mini-result" id="mvs_result">
+        <span class="mini-label" contenteditable="true" spellcheck="false">New Max Volumetric Speed</span>
+        <span class="mini-value" id="mvs_value">—</span>
+        <button class="copy-btn" id="copy_mvs" onclick="copyVal('mvs_value', 'copy_mvs')">COPY</button>
+      </div>
+    </div>
+
+    <!-- Col 6: Retraction Test -->
+    <div class="card">
+      <div class="card-title" contenteditable="true" spellcheck="false">Retraction · Tower Method</div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Starting retraction length (mm)</label>
+        <input type="number" id="ret_start" value="0" step="0.1" min="0" placeholder="0">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Step size used in test</label>
+        <input type="number" id="ret_step" value="0.1" step="0.01" min="0.001" placeholder="0.1">
+      </div>
+      <div class="field">
+        <label contenteditable="true" spellcheck="false">Best height (mm)</label>
+        <input type="number" id="ret_height" value="" step="0.1" min="0" placeholder="e.g. 5">
+      </div>
+      <div class="formula" contenteditable="true" spellcheck="false"><span>Retraction</span> = Start Length + (Step Size × Best Height)</div>
+      <button class="calc-btn" onclick="calcRetraction()">CALCULATE RETRACTION →</button>
+      <div class="mini-result" id="ret_result">
+        <span class="mini-label" contenteditable="true" spellcheck="false">Retraction Length</span>
+        <span class="mini-value" id="ret_value">—</span>
+        <button class="copy-btn" id="copy_ret" onclick="copyVal('ret_value', 'copy_ret')">COPY</button>
+      </div>
+    </div>
+
+  </div><!-- end grid -->
+
+
+</div>
+
+<script>
+  function calculate() {
+    const lineW   = parseFloat(document.getElementById('multiplier').value);
+    const walls   = 1; // single wall
+    const curFlow = parseFloat(document.getElementById('current_flow').value);
+    const rawSides = ['s1','s2','s3','s4'].map(id => {
+      const v = parseFloat(document.getElementById(id).value);
+      return isNaN(v) || v <= 0 ? null : v;
+    });
+    const sides = rawSides.filter(v => v !== null);
+    if (!sides.length) {
+      const btn = document.querySelector('.calc-btn');
+      btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+      btn.textContent = 'ENTER AT LEAST ONE MEASUREMENT';
+      setTimeout(() => { btn.textContent = 'CALCULATE FLOW RATE →'; btn.classList.remove('shake'); }, 1800);
+      return;
+    }
+    const avg = sides.reduce((a,b) => a+b, 0) / sides.length;
+    const expected = walls * lineW;
+    const newFlow = (expected / avg) * curFlow;
+    const newFlowR = Math.round(newFlow * 10000) / 10000;
+    const delta = avg - expected;
+    let icon, statusText, resultColor;
+    const pct = Math.abs(newFlowR - curFlow);
+    if (pct < 0.01) { icon='✅'; statusText='Already<br>dialed in!'; resultColor='#4caf82'; }
+    else if (newFlowR < curFlow) { icon='⬇️'; statusText='Flow was<br>too high'; resultColor='#f0a500'; }
+    else { icon='⬆️'; statusText='Flow was<br>too low'; resultColor='#ff6b35'; }
+    const val = document.getElementById('result_value');
+    val.style.color = resultColor;
+    val.textContent = newFlowR;
+    document.getElementById('result_detail').innerHTML =
+      `avg: <span>${avg.toFixed(4)} mm</span>  expected: <span>${expected.toFixed(4)} mm</span>  δ: <span>${delta >= 0 ? '+' : ''}${delta.toFixed(4)} mm</span>`;
+    document.getElementById('status_icon').textContent = icon;
+    document.getElementById('status_text').innerHTML = statusText;
+    document.getElementById('result_card').classList.add('visible');
+  }
+
+  document.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+  });
+
+  function calcFlowBlock() {
+    const oldFlow = parseFloat(document.getElementById('fr_current').value);
+    const chip    = parseFloat(document.getElementById('fr_chip').value);
+    if (isNaN(oldFlow) || isNaN(chip)) return;
+    document.getElementById('fr_value').textContent = (oldFlow * (100 + chip) / 100).toFixed(4);
+    document.getElementById('fr_result').classList.add('visible');
+  }
+
+  function calcPA() {
+    const start  = parseFloat(document.getElementById('pa_start').value);
+    const step   = parseFloat(document.getElementById('pa_step').value);
+    const height = parseFloat(document.getElementById('pa_height').value);
+    if (isNaN(start) || isNaN(step) || isNaN(height)) return;
+    document.getElementById('pa_value').textContent = (start + step * height).toFixed(4);
+    document.getElementById('pa_result').classList.add('visible');
+  }
+
+  function calcMVS() {
+    const start  = parseFloat(document.getElementById('mvs_start').value);
+    const step   = parseFloat(document.getElementById('mvs_step').value);
+    const height = parseFloat(document.getElementById('mvs_height').value);
+    if (isNaN(start) || isNaN(step) || isNaN(height)) return;
+    document.getElementById('mvs_value').textContent = (start + step * height).toFixed(2) + ' mm³/s';
+    document.getElementById('mvs_result').classList.add('visible');
+  }
+  function calcRetraction() {
+    const start  = parseFloat(document.getElementById('ret_start').value);
+    const step   = parseFloat(document.getElementById('ret_step').value);
+    const height = parseFloat(document.getElementById('ret_height').value);
+    if (isNaN(start) || isNaN(step) || isNaN(height)) return;
+    const retraction = start + (step * height);
+    document.getElementById('ret_value').textContent = retraction.toFixed(3) + ' mm';
+    document.getElementById('ret_result').classList.add('visible');
+  }
+  function copyVal(valueId, btnId) {
+    const text = document.getElementById(valueId).textContent;
+    if (!text || text === '—') return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      btn.textContent = 'COPIED!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500);
+    });
+  }
+</script>
+</body>
+</html>
