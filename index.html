@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -127,7 +126,7 @@
   }
 
   .field input {
-    width: 90px;
+    width: 100px;
     flex-shrink: 0;
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -137,7 +136,7 @@
     font-size: 15px;
     font-weight: 700;
     padding: 5px 8px;
-    text-align: right;
+    text-align: left;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
@@ -195,8 +194,8 @@
     font-family: var(--mono);
     font-size: 15px;
     font-weight: 700;
-    padding: 5px 14px 5px 8px;
-    text-align: right;
+    padding: 5px 8px;
+    text-align: left;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
   }
@@ -337,21 +336,6 @@
   .copy-btn.copied { border-color: #4caf82; color: #4caf82; }
 
 
-  /* ── Editable text ── */
-  [contenteditable="true"] {
-    outline: none;
-    cursor: text;
-    border-radius: 2px;
-    transition: background 0.15s, box-shadow 0.15s;
-  }
-  [contenteditable="true"]:hover {
-    background: rgba(240,165,0,0.06);
-    box-shadow: 0 0 0 1px rgba(240,165,0,0.2);
-  }
-  [contenteditable="true"]:focus {
-    background: rgba(240,165,0,0.1);
-    box-shadow: 0 0 0 1px rgba(240,165,0,0.4);
-  }
 
   /* ── Formula bar ── */
   .formula {
@@ -377,6 +361,49 @@
     40%,80%  { transform: translateX(4px); }
   }
   .shake { animation: shake 0.35s ease; }
+
+  /* ── Split decimal input ── */
+  .split-input {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+    width: 100px;
+    height: 29px;
+  }
+  .split-input:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(240,165,0,0.12);
+  }
+  .si-whole, .si-dec {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 0;
+    min-width: 0;
+    flex: 1;
+  }
+  .si-whole { text-align: right; padding-left: 6px; }
+  .si-dec   { text-align: left;  padding-right: 4px; flex: 1.5; }
+  .si-dot {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .si-whole::placeholder, .si-dec::placeholder { color: var(--muted); font-weight: 400; }
+  .split-input input[type="hidden"] { display: none; }
 </style>
 </head>
 <body>
@@ -384,9 +411,9 @@
 
   <!-- Header -->
   <div class="header" style="justify-content:space-between;">
-    <h1 contenteditable="true" spellcheck="false">Flow Test Calculators <span>for 3D Printing Slicers</span></h1>
+    <h1>Flow Test Calculators <span>for 3D Printing Slicers</span></h1>
   </div>
-  <span style="font-family:var(--sans); font-size:14px; color:#ffffff; font-weight:300; margin-left:auto;" contenteditable="true" spellcheck="false">by Beacon</span>
+  <span style="font-family:var(--sans); font-size:14px; color:#ffffff; font-weight:300; margin-left:auto;">by Beacon</span>
 
   <!-- 4-column grid -->
   <div class="grid">
@@ -394,56 +421,56 @@
     <!-- Col 1: Single Wall Cube (spans 2 cols) -->
     <div style="grid-column: span 2; display: flex; flex-direction: column; height: 100%;">
       <div class="card" style="flex:1;">
-        <div class="card-title" contenteditable="true" spellcheck="false">Flow Rate — Single Wall Cube Method</div>
+        <div class="card-title">Flow Rate — Single Wall Cube Method</div>
 
         <div class="field">
-          <label contenteditable="true" spellcheck="false">Target Wall Thickness (mm)</label>
-          <input type="number" id="multiplier" value="0.40" step="0.01" min="0.1" placeholder="0.40">
+          <label>Target Wall Thickness (mm)</label>
+          <div class="split-input" data-id="multiplier"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="40" value="40" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="multiplier" value="0.40"></div>
         </div>
         <div class="field">
-          <label contenteditable="true" spellcheck="false">Current flow ratio</label>
-          <input type="number" id="current_flow" value="1" step="0.001" min="0.001" placeholder="1.0">
+          <label>Current flow ratio</label>
+          <div class="split-input" data-id="current_flow"><input class="si-whole" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="current_flow" value="1.000"></div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
           <!-- Instructions box -->
           <div style="background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:12px; display:flex; align-items:center;">
-            <p contenteditable="true" spellcheck="false" style="font-family:var(--sans); font-size:14px; color:#aaa; font-weight:300; line-height:1.7;">Measure each side in the middle of the cube avoiding the corners. Enter each side's measurement. If all sides measure the same, just enter that value in one section (Side 1) and hit calculate.</p>
+            <p style="font-family:var(--sans); font-size:14px; color:#aaa; font-weight:300; line-height:1.7;">Measure each side in the middle of the cube avoiding the corners. Enter each side's measurement. If all sides measure the same, just enter that value in one section (Side 1) and hit calculate.</p>
           </div>
 
           <!-- Measurement inputs -->
           <div class="meas-grid">
             <div class="meas-cell">
-              <label contenteditable="true" spellcheck="false">Side 1</label>
-              <input type="number" id="s1" step="0.001" placeholder="0.000" value="0.000">
+              <label>Side 1</label>
+              <div class="split-input" data-id="s1"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="s1" value="0.000"></div>
               <div class="unit">mm</div>
             </div>
             <div class="meas-cell">
-              <label contenteditable="true" spellcheck="false">Side 2</label>
-              <input type="number" id="s2" step="0.001" placeholder="0.000" value="0.000">
+              <label>Side 2</label>
+              <div class="split-input" data-id="s2"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="s2" value="0.000"></div>
               <div class="unit">mm</div>
             </div>
             <div class="meas-cell">
-              <label contenteditable="true" spellcheck="false">Side 3</label>
-              <input type="number" id="s3" step="0.001" placeholder="0.000" value="0.000">
+              <label>Side 3</label>
+              <div class="split-input" data-id="s3"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="s3" value="0.000"></div>
               <div class="unit">mm</div>
             </div>
             <div class="meas-cell">
-              <label contenteditable="true" spellcheck="false">Side 4</label>
-              <input type="number" id="s4" step="0.001" placeholder="0.000" value="0.000">
+              <label>Side 4</label>
+              <div class="split-input" data-id="s4"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="s4" value="0.000"></div>
               <div class="unit">mm</div>
             </div>
           </div>
         </div>
 
-        <div class="formula" contenteditable="true" spellcheck="false"><span>New Ratio</span> = (Target Wall Thickness ÷ Avg Measured Wall) × Current Ratio</div>
+        <div class="formula"><span>New Ratio</span> = (Target Wall Thickness ÷ Avg Measured Wall) × Current Ratio</div>
         <button class="calc-btn" onclick="calculate()">CALCULATE FLOW RATE →</button>
       </div>
 
       <!-- Result -->
       <div class="result-card" id="result_card">
         <div class="result-left">
-          <div class="result-label" contenteditable="true" spellcheck="false">New Flow Ratio</div>
+          <div class="result-label">New Flow Ratio</div>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="result-value" id="result_value">—</div>
             <button class="copy-btn" id="copy_main" onclick="copyVal('result_value','copy_main')">COPY</button>
@@ -459,19 +486,20 @@
 
     <!-- Col 2: Block Method -->
     <div class="card">
-      <div class="card-title" contenteditable="true" spellcheck="false">Flow Rate · Block Method</div>
+      <div class="card-title">Flow Rate · Block Method</div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Current flow ratio</label>
-        <input type="number" id="fr_current" value="1.0" step="0.001" min="0.01" placeholder="1.0">
+        <label>Current flow ratio</label>
+        <div class="split-input" data-id="fr_current"><input class="si-whole" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="fr_current" value="1.000"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Best block value (e.g. +5 or −3)</label>
-        <input type="number" id="fr_chip" value="0" step="1" placeholder="0">
+        <label>Best block value (e.g. +5 or −3)</label>
+        <input id="fr_chip_raw" type="text" maxlength="3" value="" placeholder="00" autocomplete="off" style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:700;padding:5px 8px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;text-align:center;">
+        <input type="hidden" id="fr_chip" value="0">
       </div>
-      <div class="formula" contenteditable="true" spellcheck="false"><span>New Ratio</span> = Current Ratio × (100 + Best Block Value) ÷ 100</div>
+      <div class="formula"><span>New Ratio</span> = Current Ratio × (100 + Best Block Value) ÷ 100</div>
       <button class="calc-btn" onclick="calcFlowBlock()">CALCULATE FLOW RATIO →</button>
       <div class="mini-result" id="fr_result">
-        <span class="mini-label" contenteditable="true" spellcheck="false">New Flow Ratio</span>
+        <span class="mini-label">New Flow Ratio</span>
         <span class="mini-value" id="fr_value">—</span>
         <button class="copy-btn" id="copy_fr" onclick="copyVal('fr_value', 'copy_fr')">COPY</button>
       </div>
@@ -479,23 +507,23 @@
 
     <!-- Col 3: Pressure Advance -->
     <div class="card">
-      <div class="card-title" contenteditable="true" spellcheck="false">Pressure Advance · Tower Method</div>
+      <div class="card-title">Pressure Advance · Tower Method</div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Starting PA value</label>
-        <input type="number" id="pa_start" value="0" step="0.001" min="0" placeholder="0">
+        <label>Starting PA value</label>
+        <div class="split-input" data-id="pa_start"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="000" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="pa_start" value="0.000"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">PA step size used in test</label>
-        <input type="number" id="pa_step" value="0.002" step="0.001" min="0.0001" placeholder="0.002">
+        <label>PA step size used in test</label>
+        <div class="split-input" data-id="pa_step"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="002" value="002" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="pa_step" value="0.002"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Best height (mm)</label>
-        <input type="number" id="pa_height" value="" step="0.1" min="0" placeholder="e.g. 8">
+        <label>Best height (mm)</label>
+        <div class="split-input" data-id="pa_height" data-whole-max="2"><input class="si-whole" type="text" inputmode="numeric" placeholder="00" value="" maxlength="2" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="000" value="" maxlength="3" data-digits="3" autocomplete="off"><input type="hidden" id="pa_height" value="."></div>
       </div>
-      <div class="formula" contenteditable="true" spellcheck="false"><span>PA</span> = Start Value + (Step Size × Best Height)</div>
+      <div class="formula"><span>PA</span> = Start Value + (Step Size × Best Height)</div>
       <button class="calc-btn" onclick="calcPA()">CALCULATE PRESSURE ADVANCE →</button>
       <div class="mini-result" id="pa_result">
-        <span class="mini-label" contenteditable="true" spellcheck="false">New Pressure Advance</span>
+        <span class="mini-label">New Pressure Advance</span>
         <span class="mini-value" id="pa_value">—</span>
         <button class="copy-btn" id="copy_pa" onclick="copyVal('pa_value', 'copy_pa')">COPY</button>
       </div>
@@ -503,23 +531,23 @@
 
     <!-- Col 4: Max Volumetric Speed -->
     <div class="card">
-      <div class="card-title" contenteditable="true" spellcheck="false">Max Volumetric Speed</div>
+      <div class="card-title">Max Volumetric Speed</div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Starting Volumetric Speed (mm³/s)</label>
-        <input type="number" id="mvs_start" value="1" step="0.5" min="0.1" placeholder="1">
+        <label>Starting Volumetric Speed (mm³/s)</label>
+        <div class="split-input" data-id="mvs_start" data-whole-max="2"><input class="si-whole" type="text" inputmode="numeric" placeholder="00" value="1" maxlength="2" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="00" value="0" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="mvs_start" value="1.0"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Volumetric step used in test</label>
-        <input type="number" id="mvs_step" value="0.5" step="0.1" min="0.01" placeholder="0.5">
+        <label>Volumetric step used in test</label>
+        <div class="split-input" data-id="mvs_step"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="00" value="50" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="mvs_step" value="0.5"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Lowest failure height (mm)</label>
-        <input type="number" id="mvs_height" value="" step="0.1" min="0" placeholder="e.g. 12">
+        <label>Lowest failure height (mm)</label>
+        <div class="split-input" data-id="mvs_height" data-whole-max="2"><input class="si-whole" type="text" inputmode="numeric" placeholder="00" value="" maxlength="2" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="00" value="" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="mvs_height" value="."></div>
       </div>
-      <div class="formula" contenteditable="true" spellcheck="false"><span>Max Flow</span> = Starting Speed + (Step × Failure Height)</div>
+      <div class="formula"><span>Max Flow</span> = Starting Speed + (Step × Failure Height)</div>
       <button class="calc-btn" onclick="calcMVS()">CALCULATE MAX FLOWRATE →</button>
       <div class="mini-result" id="mvs_result">
-        <span class="mini-label" contenteditable="true" spellcheck="false">New Max Volumetric Speed</span>
+        <span class="mini-label">New Max Volumetric Speed</span>
         <span class="mini-value" id="mvs_value">—</span>
         <button class="copy-btn" id="copy_mvs" onclick="copyVal('mvs_value', 'copy_mvs')">COPY</button>
       </div>
@@ -527,23 +555,23 @@
 
     <!-- Col 6: Retraction Test -->
     <div class="card">
-      <div class="card-title" contenteditable="true" spellcheck="false">Retraction · Tower Method</div>
+      <div class="card-title">Retraction · Tower Method</div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Starting retraction length (mm)</label>
-        <input type="number" id="ret_start" value="0" step="0.1" min="0" placeholder="0">
+        <label>Starting retraction length (mm)</label>
+        <div class="split-input" data-id="ret_start"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" data-digits="1" autocomplete="off"><input type="hidden" id="ret_start" value="0.0"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Step size used in test</label>
-        <input type="number" id="ret_step" value="0.1" step="0.01" min="0.001" placeholder="0.1">
+        <label>Step size used in test</label>
+        <div class="split-input" data-id="ret_step"><input class="si-whole" type="text" inputmode="numeric" placeholder="0" value="0" maxlength="1" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="1" value="1" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="ret_step" value="0.1"></div>
       </div>
       <div class="field">
-        <label contenteditable="true" spellcheck="false">Best height (mm)</label>
-        <input type="number" id="ret_height" value="" step="0.1" min="0" placeholder="e.g. 5">
+        <label>Best height (mm)</label>
+        <div class="split-input" data-id="ret_height" data-whole-max="2"><input class="si-whole" type="text" inputmode="numeric" placeholder="00" value="" maxlength="2" autocomplete="off"><span class="si-dot">.</span><input class="si-dec" type="text" inputmode="numeric" placeholder="00" value="" maxlength="2" data-digits="2" autocomplete="off"><input type="hidden" id="ret_height" value="."></div>
       </div>
-      <div class="formula" contenteditable="true" spellcheck="false"><span>Retraction</span> = Start Length + (Step Size × Best Height)</div>
+      <div class="formula"><span>Retraction</span> = Start Length + (Step Size × Best Height)</div>
       <button class="calc-btn" onclick="calcRetraction()">CALCULATE RETRACTION →</button>
       <div class="mini-result" id="ret_result">
-        <span class="mini-label" contenteditable="true" spellcheck="false">Retraction Length</span>
+        <span class="mini-label">Retraction Length</span>
         <span class="mini-value" id="ret_value">—</span>
         <button class="copy-btn" id="copy_ret" onclick="copyVal('ret_value', 'copy_ret')">COPY</button>
       </div>
@@ -555,12 +583,101 @@
 </div>
 
 <script>
+  // ── Split input logic ──
+  function getVal(id) {
+    const hidden = document.getElementById(id);
+    return parseFloat(hidden.value);
+  }
+
+  function syncHidden(wrapper) {
+    const id = wrapper.dataset.id;
+    const whole = wrapper.querySelector('.si-whole').value.trim() || '0';
+    const dec   = wrapper.querySelector('.si-dec').value.trim() || '0';
+    const neg   = wrapper.dataset.neg === '1';
+    let numStr = whole.replace(/[^0-9\-]/g, '') + '.' + dec.replace(/[^0-9]/g, '');
+    document.getElementById(id).value = numStr;
+  }
+
+  document.querySelectorAll('.split-input').forEach(wrapper => {
+    const wholeIn = wrapper.querySelector('.si-whole');
+    const decIn   = wrapper.querySelector('.si-dec');
+    const maxDec  = parseInt(decIn.dataset.digits) || 3;
+    const isNeg   = wrapper.dataset.neg === '1';
+
+    // On focus: clear the clicked half
+    wholeIn.addEventListener('focus', function() {
+      this._prev = this.value;
+      this.value = '';
+      this.select();
+    });
+    decIn.addEventListener('focus', function() {
+      this._prev = this.value;
+      this.value = '';
+      this.select();
+    });
+
+    // On blur: restore if empty
+    wholeIn.addEventListener('blur', function() {
+      if (this.value === '') this.value = this._prev || '0';
+      syncHidden(wrapper);
+    });
+    decIn.addEventListener('blur', function() {
+      if (this.value === '') this.value = this._prev || '0';
+      // pad to correct length
+      this.value = this.value.padEnd(maxDec, '0').slice(0, maxDec);
+      syncHidden(wrapper);
+    });
+
+    // Only allow digits (and minus in whole if neg allowed)
+    wholeIn.addEventListener('input', function() {
+      let v = this.value.replace(isNeg ? /[^0-9\-]/g : /[^0-9]/g, '');
+      if (isNeg) v = v.replace(/(?!^)-/g, '');
+      this.value = v;
+      syncHidden(wrapper);
+      // auto-jump to decimal after maxlength digits
+      const wholeMax = parseInt(wrapper.dataset.wholeMax) || 1;
+      if (v.length >= wholeMax && !isNeg) {
+        decIn.focus();
+        decIn.select();
+      }
+    });
+    decIn.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '').slice(0, maxDec);
+      syncHidden(wrapper);
+    });
+
+    // Tab from whole -> dec, auto-jump after maxDec digits in dec
+    wholeIn.addEventListener('keydown', function(e) {
+      if (e.key === '.' || e.key === 'Tab') {
+        e.preventDefault();
+        decIn.focus();
+        decIn.select();
+      }
+      if (e.key === 'Enter') calculate();
+    });
+    decIn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') calculate();
+    });
+    decIn.addEventListener('input', function() {
+      if (this.value.length >= maxDec) {
+        // move focus to next split-input's whole, or blur
+        const all = Array.from(document.querySelectorAll('.split-input'));
+        const idx = all.indexOf(wrapper);
+        if (idx < all.length - 1) all[idx+1].querySelector('.si-whole').focus();
+        else this.blur();
+      }
+    });
+
+    // Initial sync
+    syncHidden(wrapper);
+  });
+
+  // ── Calculators ──
   function calculate() {
-    const lineW   = parseFloat(document.getElementById('multiplier').value);
-    const walls   = 1; // single wall
-    const curFlow = parseFloat(document.getElementById('current_flow').value);
+    const lineW   = getVal('multiplier');
+    const curFlow = getVal('current_flow');
     const rawSides = ['s1','s2','s3','s4'].map(id => {
-      const v = parseFloat(document.getElementById(id).value);
+      const v = getVal(id);
       return isNaN(v) || v <= 0 ? null : v;
     });
     const sides = rawSides.filter(v => v !== null);
@@ -572,7 +689,7 @@
       return;
     }
     const avg = sides.reduce((a,b) => a+b, 0) / sides.length;
-    const expected = walls * lineW;
+    const expected = 1 * lineW;
     const newFlow = (expected / avg) * curFlow;
     const newFlowR = Math.round(newFlow * 10000) / 10000;
     const delta = avg - expected;
@@ -591,44 +708,62 @@
     document.getElementById('result_card').classList.add('visible');
   }
 
-  document.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
-  });
+  // fr_chip raw input: accepts +05 or -10
+  (function() {
+    const inp = document.getElementById('fr_chip_raw');
+    inp.addEventListener('focus', function() { this.select(); this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(240,165,0,0.12)'; });
+    inp.addEventListener('blur',  function() { this.style.borderColor='var(--border)'; this.style.boxShadow=''; syncFrChipRaw(); });
+    inp.addEventListener('input', function() {
+      // allow only +, -, and digits; keep sign at front
+      let v = this.value;
+      let sign = '';
+      if (v[0] === '+' || v[0] === '-') { sign = v[0]; v = v.slice(1); }
+      v = v.replace(/[^0-9]/g, '').slice(0, 2);
+      this.value = sign + v;
+      syncFrChipRaw();
+    });
+    inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') calcFlowBlock(); });
+    function syncFrChipRaw() {
+      const val = parseFloat(inp.value) || 0;
+      document.getElementById('fr_chip').value = val;
+    }
+  })();
 
   function calcFlowBlock() {
-    const oldFlow = parseFloat(document.getElementById('fr_current').value);
-    const chip    = parseFloat(document.getElementById('fr_chip').value);
+    const oldFlow = getVal('fr_current');
+    const chip = parseFloat(document.getElementById('fr_chip').value);
     if (isNaN(oldFlow) || isNaN(chip)) return;
     document.getElementById('fr_value').textContent = (oldFlow * (100 + chip) / 100).toFixed(4);
     document.getElementById('fr_result').classList.add('visible');
   }
 
   function calcPA() {
-    const start  = parseFloat(document.getElementById('pa_start').value);
-    const step   = parseFloat(document.getElementById('pa_step').value);
-    const height = parseFloat(document.getElementById('pa_height').value);
+    const start  = getVal('pa_start');
+    const step   = getVal('pa_step');
+    const height = getVal('pa_height');
     if (isNaN(start) || isNaN(step) || isNaN(height)) return;
     document.getElementById('pa_value').textContent = (start + step * height).toFixed(4);
     document.getElementById('pa_result').classList.add('visible');
   }
 
   function calcMVS() {
-    const start  = parseFloat(document.getElementById('mvs_start').value);
-    const step   = parseFloat(document.getElementById('mvs_step').value);
-    const height = parseFloat(document.getElementById('mvs_height').value);
+    const start  = getVal('mvs_start');
+    const step   = getVal('mvs_step');
+    const height = getVal('mvs_height');
     if (isNaN(start) || isNaN(step) || isNaN(height)) return;
     document.getElementById('mvs_value').textContent = (start + step * height).toFixed(2) + ' mm³/s';
     document.getElementById('mvs_result').classList.add('visible');
   }
+
   function calcRetraction() {
-    const start  = parseFloat(document.getElementById('ret_start').value);
-    const step   = parseFloat(document.getElementById('ret_step').value);
-    const height = parseFloat(document.getElementById('ret_height').value);
+    const start  = getVal('ret_start');
+    const step   = getVal('ret_step');
+    const height = getVal('ret_height');
     if (isNaN(start) || isNaN(step) || isNaN(height)) return;
-    const retraction = start + (step * height);
-    document.getElementById('ret_value').textContent = retraction.toFixed(3) + ' mm';
+    document.getElementById('ret_value').textContent = (start + (step * height)).toFixed(3) + ' mm';
     document.getElementById('ret_result').classList.add('visible');
   }
+
   function copyVal(valueId, btnId) {
     const text = document.getElementById(valueId).textContent;
     if (!text || text === '—') return;
